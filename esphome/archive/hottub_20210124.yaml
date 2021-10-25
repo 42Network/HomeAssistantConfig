@@ -1,0 +1,153 @@
+esphome:
+  name: hottub
+  platform: ESP8266
+  board: d1_mini_pro
+  includes: # get from github link below and put into /config/esphome
+    # https://learn.adafruit.com/adafruit-led-backpack/0-dot-56-seven-segment-backpack
+    # https://learn.adafruit.com/adafruit-led-backpack/downloads
+    # https://github.com/adafruit/Adafruit_LED_Backpack
+    - Adafruit_LEDBackpack.h
+    - Adafruit_LEDBackpack.cpp
+  libraries:
+    - "Adafruit GFX Library"
+    - "SPI"  # unused dependency
+
+wifi:
+  ssid: "EICS"
+  password: "VeggieTales42"
+  fast_connect: true
+  manual_ip:
+    static_ip: 10.1.1.118
+    gateway: 10.1.1.1
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Hottub1 Fallback Hotspot"
+    password: "UhbEhWGEoYDk"
+
+i2c:
+  - sda: GPIO4
+    scl: GPIO5
+    id: bus_a
+
+dallas:
+  - pin: GPIO2
+    update_interval: 5s
+  
+sensor:
+  - platform: homeassistant
+    id: inside_temperature
+    entity_id: sensor.netatmo_rushcreek_downstairs_temperature
+    internal: true
+
+  - platform: homeassistant
+    id: house_power
+    entity_id: sensor.main_watts
+    internal: true
+    
+  - platform: adc
+    pin: VCC
+    name: "Battery Voltage"
+    
+  - platform: dallas
+    address: 0xB53C01D6070D6E28
+    name: "Water Temperature"
+    unit_of_measurement: "°C"
+    accuracy_decimals: 2
+    id: water_temp
+    # store in globals for display
+    on_value:
+      then:
+        - lambda: |-
+              id(probe1) = x;
+
+  - platform: dallas
+    address: 0x623C01D6073C2B28
+    name: "Heater Outlet Temperature"
+    unit_of_measurement: "°C"
+    accuracy_decimals: 2
+    id: outlet_temp
+    # store in globals for display
+    on_value:
+      then:
+        - lambda: |-
+              id(probe2) = x;
+
+switch: # controls the LED on the nodemcu8266 (to find it)
+  - platform: gpio
+    name: "Hot Tub LED"
+    id: my_led
+    pin:
+      number: D4
+      inverted: yes
+
+globals: # to share data between lambdas
+  - id: probe1
+    type: double
+  - id: probe2
+    type: double
+   
+interval:
+  - interval: 1s
+    then:
+      - logger.log: "Update display"
+      - switch.toggle: my_led
+      - lambda: |-
+              static Adafruit_7segment matrix = Adafruit_7segment();
+              static double t;
+              matrix.begin(0x70);
+              t = roundf((id(probe1) * (9.0/5.0) + 32.0) * 10) / 10;
+              matrix.print(t,1);
+              matrix.writeDisplay();
+time:
+  - platform: homeassistant
+    id: esptime
+
+font:
+  - file: 'slkscr.ttf'
+    id: font1
+    size: 8
+
+  - file: 'BebasNeue-Regular.ttf'
+    id: font2
+    size: 48
+
+  - file: 'arial.ttf'
+    id: font3
+    size: 14
+    
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3D
+    lambda: |-
+      // Print "Mitt Smarta Hus" in top center.
+      it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Nathan Smart House");
+
+      // Print time in HH:MM format
+      it.strftime(0, 60, id(font2), TextAlign::BASELINE_LEFT, "%H:%M", id(esptime).now());
+
+      // Print water temperature 
+      if (id(water_temp).has_state()) {
+        it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%.1f°", id(water_temp).state);
+      }
+
+      // Print outlet temperature 
+      if (id(outlet_temp).has_state()) {
+        it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%.1f°", id(outlet_temp).state);
+      }
+           
+
+web_server:
+  port: 80
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:

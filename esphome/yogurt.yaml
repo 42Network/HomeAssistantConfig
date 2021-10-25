@@ -1,0 +1,131 @@
+---
+substitutions:
+  device: yogurt
+  name: Yogurt Maker Controller
+  reboot_timeout: 1h
+  update_interval: 10min
+
+esphome:
+  name: ${device}
+  platform: ESP32
+  board: esp32dev
+
+# Common is: wifi, api, ota, web_server, text_sensors (version, wifi-info)
+# Logger is: INFO
+# Binary sensors are: status
+# Switches are: restart
+<<: !include common/common.yaml
+<<: !include common/logger.yaml
+<<: !include common/binary_sensors.yaml
+<<: !include common/sensors.yaml
+<<: !include common/switches.yaml
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+binary_sensor:
+  - platform: gpio
+    name: "Yogurt 1 Start"
+    id: yogurt1_start
+    pin:
+      number: 19
+      mode: INPUT_PULLUP
+      inverted: true
+  - platform: gpio
+    name: "Yogurt 2 Start"
+    id: yogurt2_start
+    pin:
+      number: 3
+      mode: INPUT_PULLUP
+      inverted: true
+
+dallas:
+  - pin: 15
+    update_interval: 20s
+
+sensor:
+  - platform: dallas
+    address: 0xFF01193CCF732628
+    name: "Yogurt #1"
+    id: yogurt1_temp
+    unit_of_measurement: "°F"
+    filters:
+    - lambda: return x * (9.0/5.0) + 32.0;
+#    - calibrate_linear:
+#      - 32.2 -> 32.0
+#      - 105.6 -> 106.0
+  - platform: dallas
+    address: 0xCC3C01D6078B3E28
+    name: "Yogurt #2"
+    id: yogurt2_temp
+    unit_of_measurement: "°F"
+    filters:
+    - lambda: return x * (9.0/5.0) + 32.0;
+#    - calibrate_linear:
+#      - 32.2 -> 32.0
+#      - 105.6 -> 106.0
+  - platform: dallas
+    address: 0x1F01193CC0995128
+    name: "Yogurt #3"
+    id: yogurt3_temp
+    unit_of_measurement: "°F"
+    filters:
+    - lambda: return x * (9.0/5.0) + 32.0;
+
+  - platform: homeassistant
+    id: yogurt1_target
+    entity_id: climate.yogurt_1_controller
+    attribute: temperature
+    
+  - platform: homeassistant
+    id: yogurt2_target
+    entity_id: climate.yogurt_2_controller
+    attribute: temperature
+
+interval:
+  - interval: 1min
+    then:
+      - lambda: |-
+          static double temp1_prev, temp2_prev;
+          static double time_prev;
+          auto t1 = id(yogurt1_temp).state;
+          auto t2 = id(yogurt2_temp).state;
+          auto delta1 = t1 - temp1_prev;
+          auto delta2 = t2 - temp2_prev;
+          auto time = id(homeassistant_time).now();
+    
+font:
+  - file: 'arial.ttf'
+    id: font1
+    size: 20
+
+spi:
+  clk_pin: 18
+  mosi_pin: 23
+
+display:
+  - platform: waveshare_epaper
+    cs_pin: 5
+    dc_pin: 22
+    busy_pin: 4
+    reset_pin: 21
+    model: 2.90inv2
+    update_interval: 10s
+    rotation: 90
+    full_update_every: 10
+    lambda: |-
+      // Print time in HH:MM format
+      it.strftime(0, 0, id(font1), "%H:%M", id(homeassistant_time).now());
+      if (id(yogurt1_temp).has_state()) {
+        it.printf(0, 25, id(font1), TextAlign::TOP_LEFT, "Yogurt 1: ");
+        it.printf(it.get_width(), 25, id(font1), TextAlign::TOP_RIGHT, "%.1f°F (%.0f°F)", id(yogurt1_temp).state, id(yogurt1_target).state);
+      }
+      if (id(yogurt2_temp).has_state()) {
+        it.printf(0, 50, id(font1), TextAlign::TOP_LEFT, "Yogurt 2: ");
+        it.printf(it.get_width(), 50, id(font1), TextAlign::TOP_RIGHT, "%.1f°F (%.0f°F)", id(yogurt2_temp).state, id(yogurt2_target).state);
+      }
+      if (id(yogurt3_temp).has_state()) {
+        it.printf(0, 75, id(font1), TextAlign::TOP_LEFT, "Yogurt 3: ");
+        it.printf(it.get_width(), 75, id(font1), TextAlign::TOP_RIGHT, "%.1f°F (%.0f°F)", id(yogurt3_temp).state, id(yogurt1_target).state);
+      }

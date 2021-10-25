@@ -1,0 +1,11 @@
+garmin_view:
+  entities:
+    - switch.strings
+    - switch.plug_noise
+    - sensor.water_temperature
+    - sensor.solar_outlet_temperature
+    - switch.light
+    - switch.fan
+    - switch.garage_lights
+    - switch.hot_tub_pump
+    - switch.dehumidifier_2

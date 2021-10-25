@@ -1,0 +1,159 @@
+---
+substitutions:
+  device: hottub
+  name: Hot Tub
+  reboot_timeout: 1h
+  update_interval: 10min
+
+esphome:
+  name: ${device}
+  platform: ESP8266
+  board: d1_mini_pro
+
+# Common is: wifi, api, ota, web_server, text_sensors (version, wifi-info)
+# Logger is: INFO
+# Binary sensors are: status
+# Switches are: restart
+<<: !include common/common.yaml
+<<: !include common/logger.yaml
+<<: !include common/binary_sensors.yaml
+<<: !include common/switches.yaml
+
+status_led:
+  pin:
+    number: LED
+    inverted: true
+  
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+  manual_ip:
+    static_ip: 10.1.1.118
+    gateway: 10.1.1.1
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${device}
+    password: !secret ap_wifi_password
+
+i2c:
+  - sda: GPIO4
+    scl: GPIO5
+    id: bus_a
+
+dallas:
+  - pin: GPIO2
+    update_interval: 5s
+  
+sensor:
+  - !include common/sensor/wifi-signal.yaml
+  
+  - !include common/sensor/uptime.yaml
+  
+  - platform: homeassistant
+    id: outside_temp
+    entity_id: sensor.netatmo_rushcreek_downstairs_outdoor_temperature
+    internal: true
+
+  - platform: homeassistant
+    id: hottub_power
+    entity_id: sensor.emoncms_hottub
+    internal: true
+
+  - platform: adc
+    pin: VCC
+    name: "Battery Voltage"
+    id: batt_v
+    
+  - platform: dallas
+    address: 0xB53C01D6070D6E28
+    name: "Water Temperature"
+    unit_of_measurement: "°F"
+    accuracy_decimals: 3
+    filters:
+    - lambda: return x * (9.0/5.0) + 32.0;
+    id: water_temp
+
+  - platform: dallas
+    address: 0x623C01D6073C2B28
+    name: "Heater Outlet Temperature"
+    unit_of_measurement: "°F"
+    accuracy_decimals: 3
+    filters:
+    - lambda: return x * (9.0/5.0) + 32.0;
+    id: heater_temp
+
+  - platform: dallas
+    address: 0x2E3C01D607D08E28
+    name: "Solar Outlet Temperature"
+    unit_of_measurement: "°F"
+    accuracy_decimals: 3
+    filters:
+    - lambda: return x * (9.0/5.0) + 32.0;
+    id: solar_temp    
+
+  - platform: dallas
+    address: 0xD93C01D60720C128
+    name: "Roof Temperature"
+    unit_of_measurement: "°F"
+    accuracy_decimals: 3
+    filters:
+    - lambda: return x * (9.0/5.0) + 32.0;
+    id: roof_temp    
+
+switch: # controls the LED on the nodemcu8266 (to find it)
+  - platform: gpio
+    name: "Hot Tub LED"
+    id: my_led
+    pin:
+      number: D4
+      inverted: yes
+
+font:
+  - file: 'arial.ttf'
+    id: font3
+    size: 12
+    
+display:
+  - platform: ht16k33_alpha
+    address: 0x70
+    update_interval: 1s
+    lambda: |-
+      if (id(water_temp).has_state()) {
+        //it.printf("%#4.1f", roundf(id(water_temp).state * 10.0) / 10.0);
+        it.print(" 123.9");
+      }
+
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3D
+    lambda: |-
+      // Print outside temp
+      if (id(outside_temp).has_state()) {
+        it.printf(0, 0, id(font3), TextAlign::TOP_LEFT, "%.1f°F", id(outside_temp).state);
+      }
+      // Print power use
+      if (id(hottub_power).has_state()) {
+        it.printf(127, 0, id(font3), TextAlign::TOP_RIGHT, "%.0fW", id(hottub_power).state);
+      }
+
+      // Print heater outlet temperature 
+      if (id(heater_temp).has_state()) {
+        double delta_t = id(heater_temp).state - id(water_temp).state;
+        it.printf(0, 17, id(font3), TextAlign::TOP_LEFT, "Heater: ");
+        it.printf(127, 17, id(font3), TextAlign::TOP_RIGHT, "(%.1f) %.1f°F ", delta_t, id(heater_temp).state);
+      }
+      // Print solor outlet temperature 
+      if (id(solar_temp).has_state()) {
+        double delta_t = id(solar_temp).state - id(water_temp).state;
+        it.printf(0, 34, id(font3), TextAlign::TOP_LEFT, "Solar: ");
+        it.printf(127, 34, id(font3), TextAlign::TOP_RIGHT, "(%.1f) %.1f°F ", delta_t, id(solar_temp).state);
+      }      
+      // Print roof temperature 
+      if (id(roof_temp).has_state()) {
+        double delta_t = id(roof_temp).state - id(outside_temp).state;
+        it.printf(0, 51, id(font3), TextAlign::TOP_LEFT, "Roof: ");
+        it.printf(127, 51, id(font3), TextAlign::TOP_RIGHT, "(%.1f) %.1f°F ", delta_t, id(roof_temp).state);
+      }

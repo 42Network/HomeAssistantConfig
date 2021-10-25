@@ -1,0 +1,152 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+homeassistant:
+  customize: !include customize.yaml
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+sensor emoncms:
+  platform: emoncms
+  api_key: !secret emoncms_api_key
+  url: http://10.1.1.70/emoncms
+  id: 1
+# Example configuration.yaml entry
+emoncms_history:
+  api_key: !secret emoncms_write_api_key
+  url: http://10.1.1.70/emoncms
+  inputnode: 42
+  scan_interval: 5
+  whitelist:
+    - sensor.plug_heater_mbath_energy_total
+    - sensor.plug_servers_energy_total
+    - sensor.plug_fridge_samsung_energy_total
+    - sensor.plug_fridge_kitchen_energy_total
+    - sensor.plug_fridge_white_energy_total
+    - sensor.plug_freezer_energy_total
+    - sensor.plug_dehumidifier_energy_total
+    - sensor.plug_theater_energy_total
+    - sensor.shed_energy
+    - sensor.garage_lights_energy
+    - sensor.fan_energy
+    - sensor.light_energy
+    
+recorder:
+  db_url: !secret maria_db_url
+  
+influxdb:
+  host: a0d7b954-influxdb
+  port: 8086
+  database: homeassistant
+  username: homeassistant
+  password: !secret influxdb_ha_password
+  max_retries: 3
+  default_measurement: state  
+  tags_attributes:
+    - friendly_name
+  
+mqtt:  
+
+ffmpeg:
+
+camera:
+  - platform: generic
+    name: WyzeCam1
+    username: root
+    password: ismart12
+    authentication: basic
+    still_image_url: https://10.1.1.136/cgi-bin/currentpic.cgi
+    verify_ssl: false
+    scan_interval: 5
+
+logger:
+  default: warning
+  logs:
+    custom_components.wyzeapi: debug
+  
+opnsense:
+  url: http://10.1.1.1/api
+  api_key: !secret opnsense_api_key
+  api_secret: !secret opnsense_api_secret
+
+wyzeapi:
+  username: !secret wyzeapi_user
+  password: !secret wyzeapi_password
+
+binary_sensor:
+  - platform: template
+    sensors:
+      hottub_temp_low:
+        value_template: "{{ states('sensor.water')|float < 100.0 }}"
+        friendly_name: 'Hot tub temperature too low'
+
+climate:
+- platform: midea_ac
+  host: 10.1.1.123
+  id: 12094627919458
+- platform: generic_thermostat
+  name: Yogurt 1 Controller
+  unique_id: yogurt_1_controller
+  min_temp: 40
+  max_temp: 180
+  target_temp: 110
+  initial_hvac_mode: "off"
+  keep_alive:
+    minutes: 1
+  heater: switch.yogurt_1
+  target_sensor: sensor.yogurt_3_temp
+- platform: generic_thermostat
+  name: Yogurt 2 Controller
+  unique_id: yogurt_2_controller
+  min_temp: 40
+  max_temp: 180
+  target_temp: 110
+  initial_hvac_mode: "off"
+  keep_alive:
+    minutes: 1
+  heater: switch.yogurt_2
+  target_sensor: sensor.yogurt_2_temp
+
+device_tracker:
+  - platform: mqtt
+    devices:
+      scion_xb: "rtl_433/garagepi/devices/Acurite-Tower/A/1025/battery_ok"
+      payload_home: "1"
+  
+bhyve:
+  username: !secret bhyve_username
+  password: !secret bhyve_password
+
+sensor:
+  - platform: bhyve
+
+switch:
+  - platform: bhyve
+  
+light:
+  - platform: flux_led
+    devices:
+      10.1.1.122:
+        name: girls_led_lights
+  - platform: switch
+    name: Strings
+    entity_id: switch.strings
+  - platform: switch
+    name: Shed Light
+    entity_id: switch.shed_light
+  - platform: switch
+    name: Master Bedroom Light
+    entity_id: switch.light
+    
+panel_iframe:
+  tasmoadmin:
+    title: TasmoAdmin
+    icon: mdi:lightbulb-on
+    url: http://10.1.1.100:9541

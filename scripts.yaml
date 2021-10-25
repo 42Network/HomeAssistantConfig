@@ -1,0 +1,147 @@
+yogurt_maker_2_script:
+  alias: Yogurt Maker 2 Script
+  sequence:
+  - service: climate.set_temperature
+    target:
+      entity_id: climate.yogurt_2_controller
+    data:
+      temperature: 190
+  - service: climate.turn_on
+    target:
+      entity_id: climate.yogurt_2_controller
+  - wait_for_trigger:
+    - platform: state
+      entity_id: climate.yogurt_2_controller
+      attribute: hvac_action
+      to: idle
+  - delay:
+      hours: 0
+      minutes: 30
+      seconds: 0
+      milliseconds: 0
+  - service: climate.set_temperature
+    target:
+      entity_id: climate.yogurt_2_controller
+    data:
+      temperature: 120
+  - type: turn_on
+    device_id: 4fb54453ef4d9bfc528adf1ee49cab89
+    entity_id: switch.yogurt_fan
+    domain: switch
+  - wait_for_trigger:
+    - platform: state
+      entity_id: climate.yogurt_2_controller
+      attribute: hvac_action
+      to: heating
+  - type: turn_off
+    device_id: 4fb54453ef4d9bfc528adf1ee49cab89
+    entity_id: switch.yogurt_fan
+    domain: switch
+  - device_id: 6f79c6e479ad8dc257e8f7057019760b
+    domain: mobile_app
+    type: notify
+    title: Add culture to yogurt 2
+    message: Add culture to yogurt 2
+  - delay:
+      hours: 1
+      minutes: 0
+      seconds: 0
+      milliseconds: 0
+  - service: climate.set_temperature
+    target:
+      entity_id: climate.yogurt_2_controller
+    data:
+      temperature: 86
+  - type: turn_on
+    device_id: 4fb54453ef4d9bfc528adf1ee49cab89
+    entity_id: switch.yogurt_fan
+    domain: switch
+  - wait_for_trigger:
+    - platform: state
+      entity_id: climate.yogurt_2_controller
+      attribute: hvac_action
+      to: heating
+  - type: turn_off
+    device_id: 4fb54453ef4d9bfc528adf1ee49cab89
+    entity_id: switch.yogurt_fan
+    domain: switch
+  - delay:
+      hours: 5
+      minutes: 0
+      seconds: 0
+      milliseconds: 0
+  - service: climate.turn_off
+    target:
+      entity_id: climate.yogurt_2_controller
+  mode: single
+yogurt_maker_1_script:
+  alias: Yogurt Maker 1 Script
+  sequence:
+  - service: climate.set_temperature
+    target:
+      entity_id: climate.yogurt_1_controller
+    data:
+      temperature: 190
+  - service: climate.turn_on
+    target:
+      entity_id: climate.yogurt_1_controller
+  - wait_for_trigger:
+    - platform: state
+      entity_id: climate.yogurt_1_controller
+      attribute: hvac_action
+      to: idle
+  - delay:
+      hours: 0
+      minutes: 30
+      seconds: 0
+      milliseconds: 0
+  - service: climate.set_temperature
+    target:
+      entity_id: climate.yogurt_1_controller
+    data:
+      temperature: 120
+  - type: turn_on
+    device_id: 4fb54453ef4d9bfc528adf1ee49cab89
+    entity_id: switch.yogurt_fan
+    domain: switch
+  - wait_for_trigger:
+    - platform: state
+      entity_id: climate.yogurt_1_controller
+      attribute: hvac_action
+      to: heating
+  - type: turn_off
+    device_id: 4fb54453ef4d9bfc528adf1ee49cab89
+    entity_id: switch.yogurt_fan
+    domain: switch
+  - delay:
+      hours: 1
+      minutes: 0
+      seconds: 0
+      milliseconds: 0
+  - service: climate.set_temperature
+    target:
+      entity_id: climate.yogurt_1_controller
+    data:
+      temperature: 86
+  - type: turn_on
+    device_id: 4fb54453ef4d9bfc528adf1ee49cab89
+    entity_id: switch.yogurt_fan
+    domain: switch
+  - wait_for_trigger:
+    - platform: state
+      entity_id: climate.yogurt_1_controller
+      attribute: hvac_action
+      to: heating
+  - type: turn_off
+    device_id: 4fb54453ef4d9bfc528adf1ee49cab89
+    entity_id: switch.yogurt_fan
+    domain: switch
+  - delay:
+      hours: 5
+      minutes: 0
+      seconds: 0
+      milliseconds: 0
+  - service: climate.turn_off
+    target:
+      entity_id: climate.yogurt_1_controller
+  mode: single

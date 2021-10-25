@@ -1,0 +1,107 @@
+---
+substitutions:
+  device: lab-temp
+  name: UTD Lab Temperature
+  reboot_timeout: 1h
+  update_interval: 10min
+
+esphome:
+  name: ${device}
+  platform: ESP8266
+  board: d1_mini_pro
+
+# Common is: wifi, api, ota, web_server, text_sensors (version, wifi-info)
+# Logger is: INFO
+# Binary sensors are: status
+# Switches are: restart
+<<: !include common/common.yaml
+<<: !include common/logger.yaml
+<<: !include common/binary_sensors.yaml
+<<: !include common/switches.yaml
+
+status_led:
+  pin:
+    number: LED
+    inverted: true
+  
+wifi:
+  ssid: "IOT_Lab"
+  password: "SuiteMonkeySuit"
+  fast_connect: true
+  manual_ip:
+    static_ip: 10.1.5.2
+    gateway: 10.1.5.1
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Lab-Temp Fallback Hotspot"
+    password: "dnjztQ7Kf8nr"
+
+i2c:
+  - sda: GPIO4
+    scl: GPIO5
+    id: bus_a
+
+time:
+  - platform: homeassistant
+    id: esptime
+
+sensor:
+  - !include common/sensor/wifi-signal.yaml
+  
+  - !include common/sensor/uptime.yaml
+  
+  - platform: adc
+    pin: VCC
+    name: "UTD Lab ESP Battery Voltage"
+    id: batt_v
+    
+  - platform: sht3xd
+    temperature:
+      name: "UTD Lab Temperature"
+      unit_of_measurement: "°F"
+      filters:
+        - lambda: return x * (9.0/5.0) + 32.0;
+      id: lab_temp
+    humidity:
+      name: "UTD Lab Humidity"
+      id: lab_humidity
+    address: 0x45
+    update_interval: 20s    
+
+switch: # controls the LED on the nodemcu8266 (to find it)
+  - platform: gpio
+    name: "Lab Temp LED"
+    id: my_led
+    pin:
+      number: D4
+      inverted: yes
+
+font:
+  - file: 'arial.ttf'
+    id: font1
+    size: 10
+  - file: 'arial.ttf'
+    id: font2
+    size: 20
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 64x48"
+    reset_pin: D0
+    address: 0x3C
+    lambda: |-
+      // Print time in HH:MM format
+      it.strftime(32, 0, id(font1), TextAlign::TOP_CENTER, "%I:%M%p", id(esptime).now());
+      if (id(lab_temp).has_state()) {
+        it.printf(32, 24, id(font2), TextAlign::CENTER, "%.1f°F", id(lab_temp).state);
+      }
+      // Print humidity
+      if (id(lab_humidity).has_state()) {
+        it.printf(0, 48, id(font1), TextAlign::BOTTOM_LEFT, "%.0f%%RH", id(lab_humidity).state);
+      }
+      // Print battery voltage
+      if (id(batt_v).has_state()) {
+        it.printf(64, 48, id(font1), TextAlign::BOTTOM_RIGHT, "%.1fV", id(batt_v).state);
+      }

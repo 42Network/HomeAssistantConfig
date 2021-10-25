@@ -1,0 +1,39 @@
+---
+substitutions:
+  device: esp32-ble1
+  name: ESP32 BLE Front
+  reboot_timeout: 1h
+  update_interval: 10min
+  plant1: "Front Beds"
+
+esphome:
+  name: ${device}
+  platform: ESP32
+  board: esp-wrover-kit
+
+# Common is: wifi, api, ota, web_server, text_sensors (version, wifi-info)
+# Logger is: INFO
+# Binary sensors are: status
+# Sensors are wifi-signal, uptime
+# Switches are: restart
+<<: !include common/common.yaml
+<<: !include common/logger.yaml
+<<: !include common/binary_sensors.yaml
+<<: !include common/sensors.yaml
+<<: !include common/switches.yaml
+
+esp32_ble_tracker:
+
+sensor:
+  - platform: xiaomi_hhccjcy01
+    mac_address: C4:7C:8D:6C:2E:27
+    temperature:
+      name: ${plant1} Temperature
+    moisture:
+      name: ${plant1} Moisture
+    illuminance:
+      name: ${plant1} Illuminance
+    conductivity:
+      name: ${plant1} Soil Conductivity
+    battery_level:
+      name: ${plant1} Battery Level

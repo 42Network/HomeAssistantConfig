@@ -1,0 +1,23 @@
+esphome:
+  name: nodemcu
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: "EICS"
+  password: "VeggieTales42"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Nodemcu Fallback Hotspot"
+    password: "3qGHiol1iHW1"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:

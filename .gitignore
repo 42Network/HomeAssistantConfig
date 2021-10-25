@@ -1,0 +1,85 @@
+# Extension ignores
+._*
+*.conf
+*.cookie
+*.cookie.backup
+*.dat
+*.db
+*.db-shm
+*.db-wal
+*.jpg
+*.log
+*.mp4
+*.pem
+*.pickle
+*.pyc
+
+# *.png
+
+# Directory (contents) ignores
+.cloud
+.insteon_local_cache
+.ssh
+.storage
+.Trash-0
+_nodered_flows
+custom_components
+deps
+development
+icloud/*
+image
+lovelace*
+ssl
+themes/*
+tmp
+tts
+www/community
+www/downloads
+www/sounds
+
+# App specific directory ignores
+appdaemon
+node-red/**
+notebooks/bokeh-examples
+
+# Specific file ignores
+.DS_Store
+.homekit.state
+.ios.conf
+.pip_progress
+.shopping_list.json
+.spotify-token-cache
+.tradfri_psk.conf
+.travis.yml
+.uuid
+.vsgitbuild
+aircast.xml
+appdaemon/appdaemon.yaml
+core
+google*.json
+home-assistant.log.1
+home-assistant.log.fault
+#icloud3*
+ip_bans.yaml
+lutron_caseta_*.json
+notebooks
+options.xml
+OZW_Log.txt
+pyozw.sqlite
+rtsp2webrtc_v4_amd64
+secrets.yaml
+ui-*.yaml.disabled
+wyze_config.ini
+zigbee.db-journal
+zwcfg_*
+zwscene.xml
+
+# Some other generic stuff
+
+
+# Specific keeps
+# !_nodered_flows/**
+# !json_data/**
+# !node-red/flows.json
+# !node-red/package.json
+!themes/compact-header.yaml

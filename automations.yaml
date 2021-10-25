@@ -1,0 +1,387 @@
+- id: '1613267428110'
+  alias: Hot Tub Temperatore Too Low
+  description: ''
+  use_blueprint:
+    path: pavax/nagging_alert_notification.yaml
+    input:
+      resolved_message: Alert {{ entity_name }} resolved
+      max_alerts: '3'
+      notify_device: dad8cbd0ba36e7857f4538f3fdc4e013
+- id: '1613268140844'
+  alias: Hot Tub Temperature Too Low
+  description: ''
+  use_blueprint:
+    path: pavax/nagging_alert_notification.yaml
+    input:
+      resolved_message: Alert {{ entity_name }} resolved
+      max_alerts: 3
+      sensor_entity: binary_sensor.hottub_temp_low
+      initial_delay: 0
+      notify_device: 6f79c6e479ad8dc257e8f7057019760b
+      notify_message: Alert {{ entity_name }} triggered
+      repeat_delay: '120'
+      alert_action:
+      - service: notify.alexa_media_echo_dot_dining_room
+        data:
+          message: Hot tub temperature too low
+      alert_state: 'on'
+- id: '1614411539292'
+  alias: Shed Door Open
+  description: Turn on shed light when door is opened
+  trigger:
+  - type: opened
+    platform: device
+    device_id: 5d11ff39623f6af77b92aea9eaf83c57
+    entity_id: binary_sensor.wyze_sense_77a1d72c
+    domain: binary_sensor
+  condition: []
+  action:
+  - device_id: 6f79c6e479ad8dc257e8f7057019760b
+    domain: mobile_app
+    type: notify
+    message: Shed Door Opened!
+    title: ''
+  - type: turn_on
+    device_id: 66dd4e9b67b2bef3f0e8a0a79d106e8d
+    entity_id: switch.shed_light
+    domain: switch
+  mode: single
+- id: '1614411825063'
+  alias: Shed Door Close
+  description: Turn off shed light when door is closed
+  trigger:
+  - type: not_opened
+    platform: device
+    device_id: 5d11ff39623f6af77b92aea9eaf83c57
+    entity_id: binary_sensor.wyze_sense_77a1d72c
+    domain: binary_sensor
+  condition: []
+  action:
+  - type: turn_off
+    device_id: 66dd4e9b67b2bef3f0e8a0a79d106e8d
+    entity_id: switch.shed_light
+    domain: switch
+  mode: single
+- id: '1614413842758'
+  alias: Low battery level detection & notification for all battery sensors
+  description: ''
+  use_blueprint:
+    path: sbyx/low-battery-level-detection-notification-for-all-battery-sensors.yaml
+    input:
+      day: 0
+      exclude:
+        entity_id:
+        - sensor.nathan_s_iphone_6s_plus_battery_level
+        device_id: 6f79c6e479ad8dc257e8f7057019760b
+      actions:
+      - device_id: dad8cbd0ba36e7857f4538f3fdc4e013
+        domain: mobile_app
+        type: notify
+        message: Batteries low for {{sensors}}
+        title: HA batteries low
+      - service: notify.media_player.echo_dot_dining_room
+        data:
+          message: Battery low for {{sensors}}
+      - device_id: 6f79c6e479ad8dc257e8f7057019760b
+        domain: mobile_app
+        type: notify
+        message: Batteries low for {{sensors}}
+        title: HA batteries low
+- id: '1614415123728'
+  alias: Entity Unavailable Notification Wyze Sense
+  description: ''
+  use_blueprint:
+    path: ini/simple-mobile-notification-when-device-becomes-unavailable.yaml
+    input:
+      entity_name: binary_sensor.wyze_sense_77a1d72c
+      notify_device: dad8cbd0ba36e7857f4538f3fdc4e013
+- id: '1626670058460'
+  alias: Hot Tub Temp Alert
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.water_temperature
+    below: '100'
+  condition: []
+  action:
+  - device_id: 6f79c6e479ad8dc257e8f7057019760b
+    domain: mobile_app
+    type: notify
+    title: ''
+    message: Hot tub temperature too low
+  mode: single
+- id: '1630211148438'
+  alias: Yogurt Maker 1 Automation
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.yogurt_1_start
+    to: 'on'
+  condition: []
+  action:
+  - service: script.yogurt_maker_1_script
+  mode: single
+- id: '1630211237746'
+  alias: Yogurt Maker 2 Automation
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.yogurt_2_start
+    to: 'on'
+  condition: []
+  action:
+  - service: script.yogurt_maker_2_script
+  mode: single
+- id: '1631679018936'
+  alias: Turn on garage  light on when motion is detected
+  description: ''
+  trigger:
+  - platform: device
+    domain: binary_sensor
+    entity_id: binary_sensor.wyze_sense_77a1487e
+    device_id: 76ac5ae62be3a21b75a3efdcc9a77dce
+    type: motion
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+      milliseconds: 0
+  condition: []
+  action:
+  - type: turn_on
+    device_id: abad1bde78a24883c6a12a0e6e81b66e
+    entity_id: switch.garage_lights
+    domain: switch
+  mode: single
+- id: '1631679159393'
+  alias: Turn garage light off when no motion detected
+  description: ''
+  trigger:
+  - type: no_motion
+    platform: device
+    device_id: 76ac5ae62be3a21b75a3efdcc9a77dce
+    entity_id: binary_sensor.wyze_sense_77a1487e
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 20
+      seconds: 0
+      milliseconds: 0
+  condition: []
+  action:
+  - type: turn_off
+    device_id: abad1bde78a24883c6a12a0e6e81b66e
+    entity_id: switch.garage_lights
+    domain: switch
+  mode: single
+- id: '1631679441805'
+  alias: Notify when Keren comes home
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: person.keren_ellsworth
+    from: not_home
+    to: home
+  condition: []
+  action:
+  - device_id: 6f79c6e479ad8dc257e8f7057019760b
+    domain: mobile_app
+    type: notify
+    title: Keren is home
+    message: Keren is home
+  mode: single
+- id: '1631679546794'
+  alias: Notify when Keren leaves
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: person.keren_ellsworth
+    from: home
+    to: not_home
+  condition: []
+  action:
+  - device_id: 6f79c6e479ad8dc257e8f7057019760b
+    domain: mobile_app
+    type: notify
+    title: Keren left
+    message: Keren left
+  mode: single
+- id: '1631749669747'
+  alias: Zone Change - Nathan - Dual
+  description: Nathan Zone Change
+  use_blueprint:
+    path: Combie81/zone_change_dual_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.nathan_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notify_device_2_2: media_player.echo_dot_dining_room
+      notify_device_2_1: notify.alexa_media_echo_dot_dining_room
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1631753659476'
+  alias: Low battery level detection & notification for all battery sensors
+  description: ''
+  use_blueprint:
+    path: sbyx/low-battery-level-detection-notification-for-all-battery-sensors.yaml
+    input:
+      actions:
+      - device_id: 6f79c6e479ad8dc257e8f7057019760b
+        domain: mobile_app
+        type: notify
+        title: ''
+        message: Low battery alert for {{sensors}}
+- id: '1631765440391'
+  alias: Zone Change - Keren - Dual
+  description: Keren Zone Change
+  use_blueprint:
+    path: Combie81/zone_change_dual_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.keren_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notify_device_2_2: media_player.echo_dot_dining_room
+      notify_device_2_1: notify.alexa_media_echo_dot_dining_room
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1631765466311'
+  alias: Zone Change - Lydia - Dual
+  description: Lydia Zone Change
+  use_blueprint:
+    path: Combie81/zone_change_dual_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.lydia_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notify_device_2_2: media_player.echo_dot_dining_room
+      notify_device_2_1: notify.alexa_media_echo_dot_dining_room
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1631765630866'
+  alias: Zone Change - Isaac - Dual
+  description: Isaac Zone Change
+  use_blueprint:
+    path: Combie81/zone_change_dual_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.isaac_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notify_device_2_2: media_player.echo_dot_dining_room
+      notify_device_2_1: notify.alexa_media_echo_dot_dining_room
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1631765655657'
+  alias: Zone Change - Tad - Dual
+  description: Tad Zone Change
+  use_blueprint:
+    path: Combie81/zone_change_dual_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.tad_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notify_device_2_2: media_player.echo_dot_dining_room
+      notify_device_2_1: notify.alexa_media_echo_dot_dining_room
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1631765673310'
+  alias: Zone Change - Dana - Dual
+  description: Dana Zone Change
+  use_blueprint:
+    path: Combie81/zone_change_dual_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.dana_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notify_device_2_2: media_player.echo_dot_dining_room
+      notify_device_2_1: notify.alexa_media_echo_dot_dining_room
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1631765692669'
+  alias: Zone Change - Aubrey - Dual
+  description: Aubrey Zone Change
+  use_blueprint:
+    path: Combie81/zone_change_dual_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.aubrey_andersen
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notify_device_2_2: media_player.echo_dot_dining_room
+      notify_device_2_1: notify.alexa_media_echo_dot_dining_room
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1632224270080'
+  alias: 1 Person Multi-Zone Change - App Notification - Keren
+  description: ''
+  use_blueprint:
+    path: Combie81/zone_change_app_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.keren_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+- id: '1632224312415'
+  alias: 1 Person Multi-Zone Change - App Notification - Lydia
+  description: ''
+  use_blueprint:
+    path: Combie81/zone_change_app_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.lydia_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1632224330491'
+  alias: 1 Person Multi-Zone Change - App Notification - Isaac
+  description: ''
+  use_blueprint:
+    path: Combie81/zone_change_app_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.isaac_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1632224353827'
+  alias: 1 Person Multi-Zone Change - App Notification - Dana
+  description: ''
+  use_blueprint:
+    path: Combie81/zone_change_app_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.dana_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1632224374802'
+  alias: 1 Person Multi-Zone Change - App Notification - Tad
+  description: ''
+  use_blueprint:
+    path: Combie81/zone_change_app_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.tad_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1632224396774'
+  alias: 1 Person Multi-Zone Change - App Notification - Aubrey
+  description: ''
+  use_blueprint:
+    path: Combie81/zone_change_app_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.aubrey_andersen
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notification_title: 'Update from {{ person_name }}:'
+- id: '1632224423394'
+  alias: 1 Person Multi-Zone Change - App Notification - Nathan
+  description: ''
+  use_blueprint:
+    path: Combie81/zone_change_app_notification.yaml
+    input:
+      notification_message: Moved from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}
+      person_entity: person.nathan_ellsworth
+      notify_device_1: 6f79c6e479ad8dc257e8f7057019760b
+      notification_title: 'Update from {{ person_name }}:'
